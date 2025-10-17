@@ -234,8 +234,8 @@ def get_distinct_spikes(spike_times):
         # Random jitter between ±1–10× unique_offset
         n = len(not_unique)
         jitter = np.concatenate([
-            1 + 9 * my_rand(n),      # positive: [1, 10]
-            -1 - 9 * my_rand(n)      # negative: [-10, -1]
+            1 + 9 * np.random.rand(n),      # positive: [1, 10]
+            -1 - 9 * np.random.rand(n)      # negative: [-10, -1]
         ])
         perm_idx = my_randperm(len(jitter), n)
         jitter = jitter[perm_idx] * unique_offset
@@ -390,7 +390,7 @@ def run_jitter_bootstraps(spike_times, event_times, use_dur, resamp_num,
     full_duration = use_dur[1] - use_dur[0]
 
     # Generate jitter matrix: eventNum x resampNum
-    jitter_per_trial = jitter_size * full_duration * (my_rand(event_num, resamp_num) - 0.5) * 2
+    jitter_per_trial = jitter_size * full_duration * (np.random.rand(event_num, resamp_num) - 0.5) * 2
 
     peaks_rand_d = np.full(resamp_num, np.nan)
     resamp_d = [None] * resamp_num
@@ -804,90 +804,30 @@ def make_latenzy2_figs(s_latenzy2, spike_times1, event_times1, spike_times2, eve
 
 def my_randperm(n, k=None, seed=1):
     """
-    Deterministic random permutation for MATLAB/Python consistency.
-    
-    Parameters:
-    -----------
+    Deterministic random permutation compatible with MATLAB my_randperm.
+
+    Parameters
+    ----------
     n : int
-        Upper bound for permutation range (generates permutation of 0 to n-1)
+        Number of elements to permute (0-indexed in Python)
     k : int, optional
         Number of elements to return. If None, returns all n elements.
     seed : int, optional
-        Random seed for reproducibility
-    
-    Returns:
-    --------
+        Random seed for reproducibility.
+
+    Returns
+    -------
     ind : ndarray
-        Random permutation indices (0-indexed)
-    
-    Examples:
-    ---------
-    >>> my_randperm(5, seed=42)
-    array([3, 4, 1, 0, 2])
-    >>> my_randperm(10, k=3, seed=42)
-    array([3, 4, 1])
+        Random permutation indices (0-indexed to match Python).
     """
     if seed is not None:
-        np.random.seed(seed)
-    
+        rng = np.random.Generator(np.random.MT19937(seed))
+    else:
+        rng = np.random.default_rng()
+
     if k is None:
         k = n
-    
-    ind = np.argsort(np.random.rand(n))
-    return ind[:k]
 
-
-def my_rand(*size, seed=1):
-    """
-    Deterministic uniform random numbers in [0,1) compatible with MATLAB.
-    
-    Parameters:
-    -----------
-    *size : int or tuple of ints
-        Size specification:
-        - my_rand(n) -> n x n matrix
-        - my_rand(m, n, ...) -> m x n x ... array
-        - my_rand() -> 1 x 1 scalar
-    seed : int, optional
-        Random seed for reproducibility (keyword argument only)
-    
-    Returns:
-    --------
-    r : ndarray
-        Array of uniform random values in [0, 1)
-    
-    Examples:
-    ---------
-    >>> my_rand(3, 3, seed=42)
-    array([[0.33333333, 0.77777778, 0.55555556],
-           [0.11111111, 0.88888889, 0.66666667],
-           [0.        , 0.44444444, 0.22222222]])
-    >>> my_rand(5, seed=42)
-    array([[0.12, 0.28, 0.6 , 0.84, 0.36],
-           [0.04, 0.2 , 0.52, 0.76, 0.96],
-           [0.  , 0.16, 0.48, 0.72, 0.92],
-           [0.08, 0.24, 0.56, 0.8 , 0.4 ],
-           [0.32, 0.44, 0.64, 0.88, 0.68]])
-    
-    Notes:
-    ------
-    This function uses a deterministic permutation approach to ensure
-    reproducibility across MATLAB and Python when using the same seed.
-    """
-    # Handle size input
-    if len(size) == 0:
-        size = (1, 1)
-    elif len(size) == 1:
-        # Single scalar input -> n x n matrix (MATLAB behavior)
-        size = (size[0], size[0])
-    
-    numel_out = np.prod(size)
-    
-    if seed is not None:
-        np.random.seed(seed)
-    
-    # Use the same permutation trick as MATLAB
-    perm = np.argsort(np.random.rand(numel_out)) + 1  # 1-based to match MATLAB
-    r = (perm - 1) / numel_out
-    
-    return r.reshape(size)
+    # generate deterministic permutation
+    perm = np.argsort(rng.random(n))
+    return perm[:k]

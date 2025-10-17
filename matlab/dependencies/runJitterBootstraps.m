@@ -30,7 +30,7 @@ if useParPool
     parfor resamp=1:resampNum
         randEventT = eventTimes+jitterPerTrial(:,resamp);
         [randD,randT] = calcTempDiff(spikeTimes,randEventT,useDur);
-        
+
         %get largest deviation
         maxVal = max(randD);
         minVal = min(randD);
@@ -50,7 +50,7 @@ else
     for resamp=1:resampNum
         randEventT = eventTimes+jitterPerTrial(:,resamp);
         [randD,randT] = calcTempDiff(spikeTimes,randEventT,useDur);
- 
+
         %get largest deviation
         maxVal = max(randD);
         minVal = min(randD);

@@ -58,7 +58,7 @@ latency, s_latenzy = latenzy(
     use_par_pool=False,
     use_direct_quant=False,
     restrict_neg=True,
-    make_plots=0
+    make_plots=1
 )
 
 # Display results
