@@ -27,6 +27,56 @@ def latenzy(spike_times,
             use_direct_quant=False, 
             restrict_neg=False, 
             make_plots=0):
+    """
+    Compute event-related spiking latency.
+
+    Parameters
+    ----------
+    spike_times : array-like
+        Spike times (seconds).
+    event_times : array-like
+        Event times (seconds).
+    use_dur : scalar or list of two floats, optional
+        Time window to include after/around event times (seconds). If scalar, interpreted as duration after each event, with start time set to zero. Default: [0, min(diff(event_times))].
+    resamp_num : int, optional
+        Number of resamples for bootstrapping (default: 100).
+    jitter_size : float, optional
+        Temporal jitter window relative to use_dur (seconds, default: 2).
+    peak_alpha : float, optional
+        Significance threshold for peak detection (default: 0.05).
+    do_stitch : bool, optional
+        Perform data stitching, highly recommended! (default: True).
+    use_par_pool : bool, optional
+        Use parallel pool for resamples (default: False).
+    use_direct_quant : bool, optional
+        Use empirical null-distribution rather than Gumbel approximation (default: False).
+    restrict_neg : bool, optional
+        Restrict negative latencies (default: False).
+    make_plots : int, optional
+        Plotting switch (0=none, 1=raster+traces, 2=traces only, default: 0).
+
+    Returns
+    -------
+    latency : float
+        Response latency (seconds), NaN if no latency could be estimated.
+    s_latenzy : dict
+        Dictionary with fields:
+            - latency: response latency (s)
+            - peakTimes: detected peak times, one per iteration (s)
+            - peakVals: detected peak values, one per iteration
+            - realFrac: see plotting function for details
+            - fracLin: idem
+            - realDiff: idem
+            - realTime: idem
+            - meanRealDiff: idem
+            - randDiff: idem
+            - randTime: idem
+            - meanRandDiff: idem
+            - pValsPeak: p-values corresponding to peakZ
+            - peakZ: significance z-scores
+            - latenzyIdx: use to index arrays above
+            - figHandles: figure handles (if make_plots > 0)
+    """
 
     spike_times = np.asarray(spike_times).flatten()
     event_times = np.asarray(event_times).flatten()
@@ -170,6 +220,58 @@ def latenzy2(
     restrict_neg=False,
     make_plots=0
 ):
+    """
+    Compute latency of spiking difference between two conditions.
+
+    Parameters
+    ----------
+    spike_times1 : array-like or list of arrays
+        Spike times for condition 1 (seconds), or list of aligned spikes per event.
+    event_times1 : array-like or None
+        Event times for condition 1 (seconds), or None if using aligned input.
+    spike_times2 : array-like or list of arrays, optional
+        Spike times for condition 2 (seconds), or list of aligned spikes per event. Default: same as spike_times1.
+    event_times2 : array-like or None, optional
+        Event times for condition 2 (seconds), or None if using aligned input.
+    use_dur : scalar or list of two floats, optional
+        Time window to include after/around event times (seconds). If scalar, interpreted as duration after each event, with start time set to zero. Default: [0, min(diff(event_times1)), min(diff(event_times2))].
+    resamp_num : int, optional
+        Number of resamples for bootstrapping (default: 250).
+    peak_alpha : float, optional
+        Significance threshold for peak detection (default: 0.05).
+    use_par_pool : bool, optional
+        Use parallel pool for resamples (default: False).
+    use_direct_quant : bool, optional
+        Use empirical null-distribution rather than Gumbel approximation (default: False).
+    restrict_neg : bool, optional
+        Restrict negative latencies (default: False).
+    make_plots : int, optional
+        Plotting switch (0=none, 1=raster+traces, 2=traces only, default: 0).
+
+    Returns
+    -------
+    latency : float
+        Response latency (seconds), NaN if no latency could be estimated.
+    s_latenzy2 : dict
+        Dictionary with fields:
+            - latency: response latency (s)
+            - peakTimes: detected peak times, one per iteration (s)
+            - peakVals: detected peak values, one per iteration
+            - realFrac: see plotting function for details
+            - diffUnSub: idem
+            - fracLin: idem
+            - realDiff: idem
+            - realTime: idem
+            - meanRealDiff: idem
+            - randDiff: idem
+            - randTime: idem
+            - meanRandDiff: idem
+            - pValsPeak: p-values corresponding to peakZ
+            - peakZ: significance z-scores
+            - latenzyIdx: use to index arrays above
+            - figHandles: figure handles (if make_plots > 0)
+    """
+
     # ALT INPUT CASE: aligned spikes in cells
     alt_input = (
         isinstance(spike_times1, list)

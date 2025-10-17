@@ -10,6 +10,11 @@ You can read our preprint describing these methods here: https://www.biorxiv.org
 ## Estimating response latencies with ***`latenZy`***
 ***`latenZy`*** is designed to estimate **when neural responses begin following discrete events** (e.g., stimulus onset) by detecting event-locked changes in spiking rates. 
 
+**Python installation:**
+```shell
+cd python
+pip install .
+```
 
 **Python example:**
 ```python
