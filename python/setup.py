@@ -13,7 +13,7 @@ setup(
     license="GNU General Public License v3 (GPL-3.0)",
     packages=find_packages('.'),
     package_dir={'': '.'},
-    install_requires=[],  # Add dependencies here if needed
+    install_requires=[],
     python_requires=">=3.7",
     classifiers=[
         "Programming Language :: Python :: 3",
