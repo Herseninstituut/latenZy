@@ -31,8 +31,8 @@ function [latency,sLatenzy] = latenzy(spikeTimes,eventTimes,useDur,resampNum,jit
 %       - randDiff: idem
 %       - randTime: idem
 %       - meanRandDiff: idem
-%       - peakZ: significance z-scores
-%       - pValsPeak: p-values corresponding to peakZ
+%       - pVals: p-values for the observed peak maxima
+%       - peakZ: two-tailed z-scores corresponding to the p-values
 %       - latenzyIdx: use to index arrays above
 %       - handleFigs: figure handles
 %
@@ -190,7 +190,7 @@ while doContinue
     peaksRandSub = peaksRand-meanRandDiff;
 
     %compute significance
-    [pValPeak,peakZ] = computeZ(abs(realPeakSub),peaksRandSub(~isnan(peaksRandSub)),useDirectQuant);
+    [pValPeak,peakZ] = computePval(abs(realPeakSub),peaksRandSub(~isnan(peaksRandSub)),useDirectQuant);
 
     %store
     if ~isnan(realPeakT)

@@ -1,6 +1,6 @@
-function [pVals,Z] = computeZ(maxD,maxRandD,useDirectQuant)
+function [pVals,Z] = computePval(maxD,maxRandD,useDirectQuant)
 % compute p-values and z-scores for statistical significance testing, syntax:
-%   [pVals,Z] = computeZ(maxD,maxRandD,useDirectQuant)
+%   [pVals,Z] = computePval(maxD,maxRandD,useDirectQuant)
 %
 % inputs:
 %   - maxD: [N x 1] observed maximum values.
@@ -20,7 +20,8 @@ function [pVals,Z] = computeZ(maxD,maxRandD,useDirectQuant)
 %
 % history:
 %   6 January 2025 - v0.9
-%   - created by Robin Haak based on code by Jorrit Montijn.
+%   - created by Robin Haak based on code by Jorrit Montijn
+%   v1.0 - 30 June 2025
 
 %% check inputs
 if ~exist('useDirectQuant','var') || isempty(useDirectQuant)
@@ -32,7 +33,6 @@ maxRandD = sort(unique(maxRandD));
 if isempty(maxRandD)
     error('computePval:EmptyMaxRandD', 'Input maxRandD must not be empty.');
 end
-
 
 %% calculate significance
 if useDirectQuant

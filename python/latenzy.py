@@ -11,7 +11,7 @@ See Haak et al. 2025
 import numpy as np
 
 from dependencies import (get_pseudo_times,calc_temp_diff,
-                          run_jitter_bootstraps,compute_z,make_latenzy_figs,
+                          run_jitter_bootstraps,compute_pval,make_latenzy_figs,
                           get_rel_spike_times,calc_temp_diff2,
                           run_swap_bootstraps,make_latenzy2_figs)
 
@@ -72,8 +72,8 @@ def latenzy(spike_times,
             - randDiff: idem
             - randTime: idem
             - meanRandDiff: idem
-            - pValsPeak: p-values corresponding to peakZ
-            - peakZ: significance z-scores
+            - pVals: p-values for the observed peak maxima
+            - peakZ: two-tailed z-scores corresponding to the p-values
             - latenzyIdx: use to index arrays above
             - figHandles: figure handles (if make_plots > 0)
     """
@@ -152,7 +152,7 @@ def latenzy(spike_times,
 
         peaks_rand_sub = peaks_rand - mean_rand_diff
 
-        p_val_peak, peak_z = compute_z(np.abs(real_peak_sub), peaks_rand_sub[~np.isnan(peaks_rand_sub)], use_direct_quant)
+        p_val_peak, peak_z = compute_pval(np.abs(real_peak_sub), peaks_rand_sub[~np.isnan(peaks_rand_sub)], use_direct_quant)
 
         if not np.isnan(real_peak_t):
             peak_vals_agg.append(real_max_d)
@@ -266,8 +266,8 @@ def latenzy2(
             - randDiff: idem
             - randTime: idem
             - meanRandDiff: idem
-            - pValsPeak: p-values corresponding to peakZ
-            - peakZ: significance z-scores
+            - pVals: p-values for the observed peak maxima
+            - peakZ: two-tailed z-scores corresponding to the p-values
             - latenzyIdx: use to index arrays above
             - figHandles: figure handles (if make_plots > 0)
     """
@@ -358,7 +358,7 @@ def latenzy2(
         peaks_rand_sub = peaks_rand - mean_rand_diff
 
         # compute significance
-        p_val_peak, peak_z = compute_z(abs(real_peak_sub), peaks_rand_sub[~np.isnan(peaks_rand_sub)], use_direct_quant)
+        p_val_peak, peak_z = compute_pval(abs(real_peak_sub), peaks_rand_sub[~np.isnan(peaks_rand_sub)], use_direct_quant)
 
         # store iteration
         if not np.isnan(real_peak_t):

@@ -423,7 +423,7 @@ def run_jitter_bootstraps(spike_times, event_times, use_dur, resamp_num,
 
 
 
-def compute_z(max_d, max_rand_d, use_direct_quant=False):
+def compute_pval(max_d, max_rand_d, use_direct_quant=False):
     """
     Compute p-values and z-scores for observed max deviations.
 
