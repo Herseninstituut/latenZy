@@ -3,9 +3,12 @@ function [peaksRandD,resampD,resampT] = runSwapBootstraps(spikesPerEvent1,spikes
 %   [peaksRandD,resampD,resampT] = runSwapBootstraps(spikesPerEvent1,spikesPerEvent2,useDur,resampNum,useParPool,useFastInterp)
 %
 % history:
-%   v0.9 - 19 February 2025
+%   v1.0.0-beta - 19 February 2025
 %   - created by Robin Haak
-%   v1.0 - 30 June 2025
+%   v1.0.0 - 30 June 2025
+%   - initial stable release
+%   v1.1.0 - 17 October 2025
+%   - ensured consistency between MATLAB and Python versions
 
 %% run bootstraps
 %swap trials randomly in each resampling
@@ -26,7 +29,7 @@ if useParPool
         % useRand2 = randi(numEvTot,[1,numEv2]);
 
         %without replacement:
-        shuffledIdx = randperm(numEvTot);
+        shuffledIdx = my_randperm(numEvTot);
         useRand1 = shuffledIdx(1:numEv1);
         useRand2 = shuffledIdx(numEv1+1:end);
 

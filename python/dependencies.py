@@ -12,7 +12,6 @@ from concurrent.futures import ThreadPoolExecutor
 from scipy.stats import norm
 from scipy.interpolate import interp1d
 from matplotlib import gridspec
-from matplotlib.cm import get_cmap
 
 
 def get_pseudo_times(spike_times, event_times, use_dur=None, discard_edges=False):
@@ -224,7 +223,7 @@ def get_distinct_spikes(spike_times):
     spike_times = np.sort(spike_times)
     unique_offset = np.max(np.finfo(spike_times.dtype).eps * np.abs(spike_times))
 
-    # identify repeated or nearly repeated spikes
+    # Identify repeated or nearly repeated spikes
     diffs = np.diff(spike_times)
     idx_repeat = np.concatenate(([False], diffs < unique_offset))
 
@@ -232,11 +231,14 @@ def get_distinct_spikes(spike_times):
         not_unique = spike_times[idx_repeat]
         n = len(not_unique)
 
-        # random jitter between ±1–10× unique_offset
-        jitter = np.random.uniform(1, 10, size=(2 * n,))
-        jitter[::2] *= 1  # positive
-        jitter[1::2] *= -1  # negative
-        jitter = np.random.permutation(jitter)[:n] * unique_offset
+        # Random jitter between ±1–10× unique_offset
+        n = len(not_unique)
+        jitter = np.concatenate([
+            1 + 9 * my_rand(n),      # positive: [1, 10]
+            -1 - 9 * my_rand(n)      # negative: [-10, -1]
+        ])
+        perm_idx = my_randperm(len(jitter), n)
+        jitter = jitter[perm_idx] * unique_offset
 
         spike_times[idx_repeat] = not_unique + jitter
         spike_times = np.sort(spike_times)
@@ -388,7 +390,7 @@ def run_jitter_bootstraps(spike_times, event_times, use_dur, resamp_num,
     full_duration = use_dur[1] - use_dur[0]
 
     # Generate jitter matrix: eventNum x resampNum
-    jitter_per_trial = jitter_size * full_duration * (np.random.rand(event_num, resamp_num) - 0.5) * 2
+    jitter_per_trial = jitter_size * full_duration * (my_rand(event_num, resamp_num) - 0.5) * 2
 
     peaks_rand_d = np.full(resamp_num, np.nan)
     resamp_d = [None] * resamp_num
@@ -629,7 +631,6 @@ def run_swap_bootstraps(spikes_per_event1, spikes_per_event2, use_dur,
     resamp_t = [None] * resamp_num
 
     def single_bootstrap(resamp_idx):
-        # shuffled_idx = np.random.permutation(num_ev_tot)
         shuffled_idx = my_randperm(num_ev_tot)
         use_rand1 = shuffled_idx[:num_ev1]
         use_rand2 = shuffled_idx[num_ev1:]
@@ -801,10 +802,92 @@ def make_latenzy2_figs(s_latenzy2, spike_times1, event_times1, spike_times2, eve
     return axs
 
 
-def my_randperm(n, k=None):
-    # randperm introduced to make results reproducable between python and
-    #  MATLAB implementation
+def my_randperm(n, k=None, seed=1):
+    """
+    Deterministic random permutation for MATLAB/Python consistency.
+    
+    Parameters:
+    -----------
+    n : int
+        Upper bound for permutation range (generates permutation of 0 to n-1)
+    k : int, optional
+        Number of elements to return. If None, returns all n elements.
+    seed : int, optional
+        Random seed for reproducibility
+    
+    Returns:
+    --------
+    ind : ndarray
+        Random permutation indices (0-indexed)
+    
+    Examples:
+    ---------
+    >>> my_randperm(5, seed=42)
+    array([3, 4, 1, 0, 2])
+    >>> my_randperm(10, k=3, seed=42)
+    array([3, 4, 1])
+    """
+    if seed is not None:
+        np.random.seed(seed)
+    
     if k is None:
         k = n
+    
     ind = np.argsort(np.random.rand(n))
     return ind[:k]
+
+
+def my_rand(*size, seed=1):
+    """
+    Deterministic uniform random numbers in [0,1) compatible with MATLAB.
+    
+    Parameters:
+    -----------
+    *size : int or tuple of ints
+        Size specification:
+        - my_rand(n) -> n x n matrix
+        - my_rand(m, n, ...) -> m x n x ... array
+        - my_rand() -> 1 x 1 scalar
+    seed : int, optional
+        Random seed for reproducibility (keyword argument only)
+    
+    Returns:
+    --------
+    r : ndarray
+        Array of uniform random values in [0, 1)
+    
+    Examples:
+    ---------
+    >>> my_rand(3, 3, seed=42)
+    array([[0.33333333, 0.77777778, 0.55555556],
+           [0.11111111, 0.88888889, 0.66666667],
+           [0.        , 0.44444444, 0.22222222]])
+    >>> my_rand(5, seed=42)
+    array([[0.12, 0.28, 0.6 , 0.84, 0.36],
+           [0.04, 0.2 , 0.52, 0.76, 0.96],
+           [0.  , 0.16, 0.48, 0.72, 0.92],
+           [0.08, 0.24, 0.56, 0.8 , 0.4 ],
+           [0.32, 0.44, 0.64, 0.88, 0.68]])
+    
+    Notes:
+    ------
+    This function uses a deterministic permutation approach to ensure
+    reproducibility across MATLAB and Python when using the same seed.
+    """
+    # Handle size input
+    if len(size) == 0:
+        size = (1, 1)
+    elif len(size) == 1:
+        # Single scalar input -> n x n matrix (MATLAB behavior)
+        size = (size[0], size[0])
+    
+    numel_out = np.prod(size)
+    
+    if seed is not None:
+        np.random.seed(seed)
+    
+    # Use the same permutation trick as MATLAB
+    perm = np.argsort(np.random.rand(numel_out)) + 1  # 1-based to match MATLAB
+    r = (perm - 1) / numel_out
+    
+    return r.reshape(size)

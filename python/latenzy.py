@@ -5,7 +5,7 @@ latenzy.py
 Contains latenzy and latenzy2 to compute latencies for spiking responses
 See Haak et al. 2025
 
-2025, Alexander Heimel, translated from MATLAB versio by Robin Haak
+2025, Alexander Heimel, translated from MATLAB version by Robin Haak
 """
 
 import numpy as np
@@ -81,6 +81,7 @@ def latenzy(spike_times,
     spike_times = np.asarray(spike_times).flatten()
     event_times = np.asarray(event_times).flatten()
 
+    # Set defailt use_dur
     event_times.sort()
     if use_dur is None:
         use_dur = [0, np.min(np.diff(event_times))]
@@ -97,6 +98,7 @@ def latenzy(spike_times,
     else:
         raise ValueError("useMaxDur[1] cannot be negative when useMaxDur[0] is negative!")
 
+    # Main loop
     latency = np.nan
     peak_times_agg = []
     peak_vals_agg = []
@@ -132,6 +134,7 @@ def latenzy(spike_times,
         if len(real_diff) < 3:
             return np.nan, {}
 
+        # Peak detection
         max_diff = np.max(real_diff)
         min_diff = np.min(real_diff)
         if abs(min_diff) >= abs(max_diff):
@@ -144,6 +147,7 @@ def latenzy(spike_times,
         real_peak_t = real_time[real_max_idx]
         real_peak_sub = real_max_d - np.mean(real_diff)
 
+        # Bootstrapping
         peaks_rand, rand_diff, rand_time = run_jitter_bootstraps(
             pseudo_spike_times, pseudo_event_times, this_max_dur, resamp_num,
             jitter_size, use_par_pool)
@@ -152,8 +156,10 @@ def latenzy(spike_times,
 
         peaks_rand_sub = peaks_rand - mean_rand_diff
 
+        # Compute significance
         p_val_peak, peak_z = compute_pval(np.abs(real_peak_sub), peaks_rand_sub[~np.isnan(peaks_rand_sub)], use_direct_quant)
 
+        # Store iteration
         if not np.isnan(real_peak_t):
             peak_vals_agg.append(real_max_d)
             peak_times_agg.append(real_peak_t)
@@ -168,20 +174,21 @@ def latenzy(spike_times,
             p_val_peak_agg.append(p_val_peak)
             peak_z_agg.append(abs(peak_z))
 
-        if real_peak_t > min_latency and p_val_peak < peak_alpha and not np.isinf(peak_z):
+        if real_peak_t > min_latency and p_val_peak < peak_alpha:
             keep_peaks.append(True)
             this_max_dur[1] = real_peak_t
         else:
             do_continue = False
             keep_peaks.append(False)
 
+    # Aggregate results
     keep_peaks = np.array(keep_peaks, dtype=bool)
     peak_times_arr = np.array(peak_times_agg)
 
     if np.any(keep_peaks):
         latency = peak_times_arr[keep_peaks][-1]
         if latency > (use_dur[0] + sum(np.abs(use_dur)) / 2) and give_late_warn:
-            print("Warning: Estimated latency is late in the window (>T/2). Consider plotting or adjusting window.")
+            print("Warning: Estimated latency is late in the window (>T/2). Consider plotting for visual check and/or adjusting window.")
     else:
         return np.nan, {}
 
@@ -342,7 +349,7 @@ def latenzy2(
         if len(real_diff) < 3:
             return np.nan, {}
 
-        # peak detection
+        # Peak detection
         max_val = np.max(real_diff)
         min_val = np.min(real_diff)
         real_max_d = min_val if abs(min_val) >= abs(max_val) else max_val
@@ -350,17 +357,17 @@ def latenzy2(
         real_peak_t = real_time[real_peak_idx]
         real_peak_sub = real_max_d - np.mean(real_diff)
 
-        # bootstrapping
+        # Bootstrapping
         peaks_rand, rand_diff, rand_time = run_swap_bootstraps(
             spikes1, spikes2, this_max_dur, resamp_num, use_par_pool
         )
         mean_rand_diff = np.array([np.mean(rd) if rd is not None and len(rd) > 0 else np.nan for rd in rand_diff])
         peaks_rand_sub = peaks_rand - mean_rand_diff
 
-        # compute significance
+        # Compute significance
         p_val_peak, peak_z = compute_pval(abs(real_peak_sub), peaks_rand_sub[~np.isnan(peaks_rand_sub)], use_direct_quant)
 
-        # store iteration
+        # Store iteration
         if not np.isnan(real_peak_t):
             peak_vals_agg.append(real_max_d)
             peak_times_agg.append(real_peak_t)
@@ -376,14 +383,14 @@ def latenzy2(
             p_val_peak_agg.append(p_val_peak)
             peak_z_agg.append(abs(peak_z))
 
-        if real_peak_t > min_latency and p_val_peak < peak_alpha and not np.isinf(peak_z):
+        if real_peak_t > min_latency and p_val_peak < peak_alpha:
             keep_peaks.append(True)
             this_max_dur[1] = real_peak_t
         else:
             do_continue = False
             keep_peaks.append(False)
 
-    # result aggregation
+    # Aggregate results
     keep_peaks = np.array(keep_peaks)
     these_peak_times = np.array(peak_times_agg)[keep_peaks]
 

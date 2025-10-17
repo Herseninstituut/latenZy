@@ -109,7 +109,7 @@ if ~exist('useDirectQuant','var') || isempty(useDirectQuant)
     useDirectQuant = false;
 end
 
-%allowNegative
+%restricNeg
 if ~exist('restrictNeg','var') || isempty(restrictNeg)
     restrictNeg = false;
 end
@@ -225,7 +225,7 @@ if ~isempty(thesePeakTimes)
 
     %warning
     if latency > (useDur(1)+sum(abs(useDur))/2) && giveLateWarn
-        warning('Estimated latency is quite late in the window (>T/2), consider plotting and/or adjusting window');
+        warning('Estimated latency is quite late in the window (>T/2). Consider plotting for visual check and/or adjusting window');
     end
 else
     return
