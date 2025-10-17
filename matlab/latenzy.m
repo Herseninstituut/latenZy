@@ -209,7 +209,7 @@ while doContinue
     end
 
     %check whether to continue
-    if realPeakT > minLatency && pValPeak < peakAlpha && ~isinf(peakZ)
+    if realPeakT > minLatency && pValPeak < peakAlpha
         keepPeaks(thisIter) = true;
         thisMaxDur(2) = realPeakT;
     else
