@@ -28,141 +28,122 @@ def get_pseudo_times(spike_times, event_times, use_dur=None, discard_edges=False
         pseudo_spike_times (np.ndarray): Stitched spike times
         pseudo_event_times (np.ndarray): Stitched event times
     """
-    spike_times = np.sort(spike_times.flatten())
-    event_times = np.sort(event_times.flatten())
 
-    if use_dur is None:
+    # Ensure correct orientation and sorting
+    spike_times = np.sort(np.ravel(spike_times))
+    event_times = np.sort(np.ravel(event_times))
+
+    # Check and format use_dur
+    if use_dur is None or len(np.atleast_1d(use_dur)) == 0:
+        if len(event_times) < 2:
+            raise ValueError("Cannot infer use_dur: need at least two event times.")
         use_dur = np.min(np.diff(event_times))
-    if np.isscalar(use_dur):
-        use_dur = np.sort([0, use_dur])
-    assert use_dur[1] > use_dur[0], f"useMaxDur[1] must be > useMaxDur[0], got {use_dur}"
+    use_dur = np.atleast_1d(use_dur)
+    if np.isscalar(use_dur) or use_dur.size == 1:
+        use_dur = np.sort([0, float(use_dur)])
+    else:
+        use_dur = np.sort(use_dur)
 
-    sample_num = len(spike_times)
-    event_num = len(event_times)
-    duration = use_dur[1] - use_dur[0]
+    assert use_dur[1] > use_dur[0], f"The second element of use_dur must be greater than the first: {use_dur}"
+
+    # Initialization
+    sample_num = spike_times.size
+    event_num = event_times.size
     pseudo_spike_t = []
     pseudo_event_times = np.full(event_num, np.nan)
+    duration = use_dur[1] - use_dur[0]
     pseudo_event_t = 0
-    last_used_sample = 0
+    last_used_sample = -1
     first_sample = None
     pseudo_t0 = 0
 
-    for i in range(event_num):
-        event_t = event_times[i] + use_dur[0]
-        start_idx = np.searchsorted(spike_times, event_t, side='left')
+    # Loop over each event
+    for this_event in range(event_num):
+        event_t = event_times[this_event] + use_dur[0]
 
-        idx = np.searchsorted(spike_times, event_t + duration, side='right')
-        end_idx = idx - 1 if idx > 0 else None
+        # Find start and end indices of spikes in this window
+        start_idx_candidates = np.where(spike_times >= event_t)[0]
+        end_idx_candidates = np.where(spike_times < (event_t + duration))[0]
 
-        if start_idx >= sample_num:
+        start_idx = start_idx_candidates[0] if start_idx_candidates.size > 0 else None
+        end_idx = end_idx_candidates[-1] if end_idx_candidates.size > 0 else None
+
+        # Handle edge cases for missing spikes
+        if start_idx is None:
             start_idx = sample_num
-        if end_idx < start_idx:
+        if end_idx is None or (start_idx is not None and start_idx > end_idx):
             start_idx = None
             end_idx = sample_num - 1
 
+        # Build sample range
         if start_idx is not None:
-            these_samples = np.arange(start_idx, end_idx + 1)
-        else:
-            these_samples = np.array([], dtype=int)
-
-        if len(these_samples) > 0:
-            if i == 0 and not discard_edges:
-                use_samples = np.arange(0, these_samples[-1] + 1)
-            elif i == event_num - 1 and not discard_edges:
-                use_samples = np.arange(these_samples[0], sample_num)
-            else:
-                use_samples = these_samples
+            use_samples = np.arange(start_idx, end_idx + 1)
         else:
             use_samples = np.array([], dtype=int)
 
-        # if len(use_samples) > 0:
-        add_t = spike_times[use_samples]
+        # Handle edge conditions
+        if use_samples.size > 0:
+            if this_event == 0 and not discard_edges:
+                use_samples = np.arange(0, use_samples[-1] + 1)
+            elif this_event == event_num - 1 and not discard_edges:
+                use_samples = np.arange(use_samples[0], sample_num)
+
+        # Spike times to add
+        add_t = spike_times[use_samples] if use_samples.size > 0 else np.array([])
         samples_overlap = use_samples <= last_used_sample
 
-        if i == 0:
+        # Overlap and pseudo-event time adjustment
+        if this_event == 0:
             pseudo_event_t = 0
-        elif duration > (event_t - event_times[i - 1]):
+        elif duration > (event_t - event_times[this_event - 1]):
             use_samples = use_samples[~samples_overlap]
-            pseudo_event_t += event_t - event_times[i - 1]
+            add_t = spike_times[use_samples]
+            pseudo_event_t += event_t - event_times[this_event - 1]
         else:
             pseudo_event_t += duration
 
-        if len(use_samples) == 0:
+        # Local pseudo times
+        if use_samples.size == 0:
             local_pseudo_t = np.array([])
         else:
             last_used_sample = use_samples[-1]
             local_pseudo_t = add_t - event_t + pseudo_event_t
 
-        if (first_sample is None) and len(use_samples) > 0:
+        # Record first sample
+        if first_sample is None and use_samples.size > 0:
             first_sample = use_samples[0]
             pseudo_t0 = pseudo_event_t
-        # else:
-            # local_pseudo_t = np.array([])
 
         pseudo_spike_t.append(local_pseudo_t)
-        pseudo_event_times[i] = pseudo_event_t
+        pseudo_event_times[this_event] = pseudo_event_t
 
-    # Add beginning
+    # Add beginning spikes 
     if not discard_edges and first_sample is not None and first_sample > 0:
         step_begin = spike_times[first_sample] - spike_times[first_sample - 1]
-        samp_add_begin = np.arange(0, first_sample)
-        if len(samp_add_begin) > 0:
-            added = spike_times[samp_add_begin]
-            added_shifted = added - added[0] + pseudo_t0 - step_begin - (added[-1] - added[0])
-            pseudo_spike_t.insert(0, added_shifted)
+        samp_add_beginning = np.arange(0, first_sample)
+        if samp_add_beginning.size > 0:
+            prepend = spike_times[samp_add_beginning]
+            prepend_shifted = prepend - prepend[0] + pseudo_t0 - step_begin - np.ptp(prepend)
+            pseudo_spike_t.insert(0, prepend_shifted)
 
-    # Add end
+    # Add end spikes
     if not discard_edges:
-        last_event_end = event_times[-1] + duration
-        remaining_idx = np.searchsorted(spike_times, last_event_end, side='right')
-        if remaining_idx >= sample_num:
-            samp_add_end = np.arange(np.searchsorted(spike_times, event_times[-1], side='left'), sample_num)
+        indices = np.where(spike_times > (event_times[-1] + duration))[0]
+        if indices.size == 0:
+            start_idx = np.where(spike_times >= event_times[-1])[0][0]
+            samp_add_end = np.arange(start_idx, sample_num)
         else:
-            samp_add_end = np.arange(remaining_idx, sample_num)
+            samp_add_end = np.arange(indices[0], sample_num)
 
-        if len(samp_add_end) > 0:
-            added = spike_times[samp_add_end] - event_times[-1] + pseudo_event_t
-            pseudo_spike_t.append(added)
+        if samp_add_end.size > 0:
+            append = spike_times[samp_add_end] - event_times[-1] + pseudo_event_t
+            pseudo_spike_t.append(append)
 
-    pseudo_spike_times = np.concatenate(pseudo_spike_t) if pseudo_spike_t else np.array([])
+    # Recombine
+    pseudo_spike_times = np.concatenate([p for p in pseudo_spike_t if p.size > 0]) if pseudo_spike_t else np.array([])
     pseudo_event_times = pseudo_event_times + abs(use_dur[0])
 
     return pseudo_spike_times, pseudo_event_times
-
-
-
-def calc_temp_diff(spike_times, event_times, use_dur):
-    """
-    Compute temporal offset vector.
-
-    Parameters:
-        spike_times (np.ndarray): Spike timestamps
-        event_times (np.ndarray): Event timestamps
-        use_dur (tuple or float): Time window to consider around each event
-
-    Returns:
-        temp_diff (np.ndarray): Difference between spike fraction and linear fraction
-        rel_spike_times (np.ndarray): Spike times relative to event
-        spike_frac (np.ndarray): Fractional spike indices
-        frac_linear (np.ndarray): Linear fraction (uniformly spaced)
-    """
-    temp_diff = np.array([])
-    spike_frac = np.array([])
-    frac_linear = np.array([])
-
-    rel_spike_times,_ = get_rel_spike_times(spike_times, event_times, use_dur, add_artif_spikes=True)
-    if rel_spike_times is None or len(rel_spike_times) == 0:
-        return temp_diff, rel_spike_times, spike_frac, frac_linear
-
-    rel_spike_times = get_distinct_spikes(rel_spike_times)
-
-    num_spikes = len(rel_spike_times)
-    spike_frac = np.linspace(1/num_spikes, 1, num_spikes)
-
-    frac_linear = (rel_spike_times - rel_spike_times[0]) / (rel_spike_times[-1] - rel_spike_times[0])
-    temp_diff = spike_frac - frac_linear
-
-    return temp_diff, rel_spike_times, spike_frac, frac_linear
 
 
 def get_rel_spike_times(spike_times, event_times, use_dur=None, add_artif_spikes=False):
@@ -209,6 +190,42 @@ def get_rel_spike_times(spike_times, event_times, use_dur=None, add_artif_spikes
 
     return rel_spike_times, spikes_per_event
 
+
+def calc_temp_diff(spike_times, event_times, use_dur):
+    """
+    Compute temporal offset vector.
+
+    Parameters:
+        spike_times (np.ndarray): Spike timestamps
+        event_times (np.ndarray): Event timestamps
+        use_dur (tuple or float): Time window to consider around each event
+
+    Returns:
+        temp_diff (np.ndarray): Difference between spike fraction and linear fraction
+        rel_spike_times (np.ndarray): Spike times relative to event
+        spike_frac (np.ndarray): Fractional spike indices
+        frac_linear (np.ndarray): Linear fraction (uniformly spaced)
+    """
+    temp_diff = np.array([])
+    spike_frac = np.array([])
+    frac_linear = np.array([])
+
+    rel_spike_times,_ = get_rel_spike_times(spike_times, event_times, use_dur, add_artif_spikes=True)
+    if rel_spike_times is None or len(rel_spike_times) == 0:
+        return temp_diff, rel_spike_times, spike_frac, frac_linear
+
+    rel_spike_times = get_distinct_spikes(rel_spike_times)
+
+    num_spikes = len(rel_spike_times)
+    spike_frac = np.linspace(1/num_spikes, 1, num_spikes)
+
+    frac_linear = (rel_spike_times - rel_spike_times[0]) / (rel_spike_times[-1] - rel_spike_times[0])
+    temp_diff = spike_frac - frac_linear
+
+    return temp_diff, rel_spike_times, spike_frac, frac_linear
+
+
+
 def get_distinct_spikes(spike_times):
     """
     Introduce minimal jitter to repeating spike times to ensure all are unique.
@@ -219,7 +236,6 @@ def get_distinct_spikes(spike_times):
     Returns:
         np.ndarray: Array with minimally jittered spike times (sorted and unique)
     """
-        
     spike_times = np.sort(spike_times)
     unique_offset = np.max(np.finfo(spike_times.dtype).eps * np.abs(spike_times))
 
@@ -232,7 +248,6 @@ def get_distinct_spikes(spike_times):
         n = len(not_unique)
 
         # Random jitter between ±1–10× unique_offset
-        n = len(not_unique)
         jitter = np.concatenate([
             1 + 9 * np.random.rand(n),      # positive: [1, 10]
             -1 - 9 * np.random.rand(n)      # negative: [-10, -1]
@@ -247,6 +262,162 @@ def get_distinct_spikes(spike_times):
         idx_repeat = np.concatenate(([False], diffs < unique_offset))
 
     return spike_times
+
+
+def my_randperm(n, k=None):
+    """
+    MATLAB-like randperm function.
+    
+    Parameters:
+        n (int): Total number of elements
+        k (int, optional): Number of elements to select. Defaults to n.
+    
+    Returns:
+        np.ndarray: Random permutation of indices
+    """
+    if k is None:
+        k = n
+    return np.random.permutation(n)[:k]
+
+
+
+def run_jitter_bootstraps(spike_times, event_times, use_dur, resamp_num,
+                          jitter_size, use_par_pool=False):
+    """
+    Run jittered bootstrap analysis.
+
+    Parameters:
+        spike_times (np.ndarray): Spike timestamps
+        event_times (np.ndarray): Event timestamps
+        use_dur (tuple): (start, end) time window around events
+        resamp_num (int): Number of resampling iterations
+        jitter_size (float): Jitter multiplier
+        use_par_pool (bool): Whether to run in parallel
+
+    Returns:
+        peaks_rand_d (np.ndarray): Peak deviations from null iterations
+        resamp_d (list of np.ndarray): Jittered temporal deviation values
+        resamp_t (list of np.ndarray): Corresponding time vectors
+    """
+    spike_times = np.sort(np.asarray(spike_times).flatten())
+    event_times = np.sort(np.asarray(event_times).flatten())
+    event_num = len(event_times)
+    full_duration = use_dur[1] - use_dur[0]
+
+    # Generate jitter matrix: eventNum x resampNum
+    jitter_per_trial = jitter_size * full_duration * (np.random.rand(event_num, resamp_num) - 0.5) * 2
+
+    peaks_rand_d = np.full(resamp_num, np.nan)
+    resamp_d = [None] * resamp_num
+    resamp_t = [None] * resamp_num
+
+    def single_resample(resamp_idx):
+        rand_event_t = event_times + jitter_per_trial[:, resamp_idx]
+        rand_d, rand_t, _, _ = calc_temp_diff(spike_times, rand_event_t, use_dur)
+
+        if len(rand_d) == 0:
+            return None, None, np.nan
+
+        max_val = np.max(rand_d)
+        min_val = np.min(rand_d)
+        max_rand_d = min_val if abs(min_val) >= abs(max_val) else max_val
+
+        return rand_d, rand_t, max_rand_d
+
+    if use_par_pool:
+        with ThreadPoolExecutor() as executor:
+            results = list(executor.map(single_resample, range(resamp_num)))
+    else:
+        results = [single_resample(i) for i in range(resamp_num)]
+
+    for i, (rd, rt, peak) in enumerate(results):
+        resamp_d[i] = rd
+        resamp_t[i] = rt
+        if not np.isnan(peak):
+            peaks_rand_d[i] = peak
+
+    return peaks_rand_d, resamp_d, resamp_t
+
+
+def compute_pval(max_d, max_rand_d, use_direct_quant=False):
+    """
+    Compute p-values and z-scores for observed max deviations.
+
+    Parameters:
+        max_d (array-like): Observed maximum values
+        max_rand_d (array-like): Randomized max values (null distribution)
+        use_direct_quant (bool): If True, use empirical quantiles
+
+    Returns:
+        p_vals (np.ndarray): p-values
+        z_scores (np.ndarray): z-scores
+    """
+    max_d = np.atleast_1d(max_d)
+    max_rand_d = np.unique(np.sort(np.asarray(max_rand_d)))
+    if max_rand_d.size == 0:
+        raise ValueError("max_rand_d must not be empty.")
+
+    p_vals = np.full(max_d.shape, np.nan)
+
+    if use_direct_quant:
+        N = len(max_rand_d)
+        for i, val in enumerate(max_d):
+            if np.isnan(val) or val < max_rand_d[0]:
+                p_vals[i] = 1
+            elif np.isinf(val) or val > max_rand_d[-1]:
+                p_vals[i] = 1 / (1 + N)
+            else:
+                # Empirical rank-based interpolation
+                interp = interp1d(max_rand_d, np.arange(1, N + 1), kind='linear', fill_value='extrapolate')
+                value_rank = interp(val)
+                p_vals[i] = 1 - (value_rank / (1 + N))
+
+        z_scores = -norm.ppf(p_vals / 2)
+    else:
+        rand_mu = np.mean(max_rand_d)
+        rand_var = np.var(max_rand_d)
+        p_vals, z_scores, _, _ = get_gumbel(rand_mu, rand_var, max_d)
+
+    return p_vals, z_scores
+
+
+def get_gumbel(mean_val, var_val, x_vals):
+    """
+    Compute p-values and z-scores for values under a fitted Gumbel distribution.
+
+    Parameters:
+        mean_val (float): Mean of the maximum value distribution
+        var_val (float): Variance of the maximum value distribution
+        x_vals (array-like): Observed maximum value(s)
+
+    Returns:
+        p_vals (np.ndarray): p-values under the Gumbel distribution
+        z_scores (np.ndarray): Corresponding z-scores
+        mode (float): Gumbel mode parameter
+        beta (float): Gumbel scale parameter
+    """
+    x_vals = np.asarray(x_vals)
+    euler_mascheroni = 0.5772156649015329  # Euler–Mascheroni constant
+
+    # Estimate Gumbel parameters from mean and variance
+    beta = np.sqrt(6 * var_val) / np.pi
+    mode = mean_val - beta * euler_mascheroni
+
+    # Gumbel CDF
+    gumbel_cdf = np.exp(-np.exp(-(x_vals - mode) / beta))
+    p_vals = 1 - gumbel_cdf
+
+    # Initial z-score conversion
+    with np.errstate(divide='ignore'):
+        z_scores = -norm.ppf(p_vals / 2)
+
+    # Handle infinite z-scores by re-approximating p
+    inf_mask = np.isinf(z_scores)
+    if np.any(inf_mask):
+        p_vals[inf_mask] = np.exp((mode - x_vals[inf_mask]) / beta)
+        z_scores[inf_mask] = -norm.ppf(p_vals[inf_mask] / 2)
+
+    return p_vals, z_scores, mode, beta
 
 
 def make_latenzy_figs(s_latenzy, spike_times, event_times, use_dur, make_plots):
@@ -366,143 +537,7 @@ def make_latenzy_figs(s_latenzy, spike_times, event_times, use_dur, make_plots):
     plt.show()
     return fig_handles
 
-def run_jitter_bootstraps(spike_times, event_times, use_dur, resamp_num,
-                          jitter_size, use_par_pool=False):
-    """
-    Run jittered bootstrap analysis.
 
-    Parameters:
-        spike_times (np.ndarray): Spike timestamps
-        event_times (np.ndarray): Event timestamps
-        use_dur (tuple): (start, end) time window around events
-        resamp_num (int): Number of resampling iterations
-        jitter_size (float): Jitter multiplier
-        use_par_pool (bool): Whether to run in parallel
-
-    Returns:
-        peaks_rand_d (np.ndarray): Peak deviations from null iterations
-        resamp_d (list of np.ndarray): Jittered temporal deviation values
-        resamp_t (list of np.ndarray): Corresponding time vectors
-    """
-    spike_times = np.sort(np.asarray(spike_times).flatten())
-    event_times = np.sort(np.asarray(event_times).flatten())
-    event_num = len(event_times)
-    full_duration = use_dur[1] - use_dur[0]
-
-    # Generate jitter matrix: eventNum x resampNum
-    jitter_per_trial = jitter_size * full_duration * (np.random.rand(event_num, resamp_num) - 0.5) * 2
-
-    peaks_rand_d = np.full(resamp_num, np.nan)
-    resamp_d = [None] * resamp_num
-    resamp_t = [None] * resamp_num
-
-    def single_resample(resamp_idx):
-        rand_event_t = event_times + jitter_per_trial[:, resamp_idx]
-        rand_d, rand_t, _, _ = calc_temp_diff(spike_times, rand_event_t, use_dur)
-
-        if len(rand_d) == 0:
-            return None, None, np.nan
-
-        max_val = np.max(rand_d)
-        min_val = np.min(rand_d)
-        max_rand_d = min_val if abs(min_val) >= abs(max_val) else max_val
-
-        return rand_d, rand_t, max_rand_d
-
-    if use_par_pool:
-        with ThreadPoolExecutor() as executor:
-            results = list(executor.map(single_resample, range(resamp_num)))
-    else:
-        results = [single_resample(i) for i in range(resamp_num)]
-
-    for i, (rd, rt, peak) in enumerate(results):
-        resamp_d[i] = rd
-        resamp_t[i] = rt
-        if not np.isnan(peak):
-            peaks_rand_d[i] = peak
-
-    return peaks_rand_d, resamp_d, resamp_t
-
-
-
-def compute_pval(max_d, max_rand_d, use_direct_quant=False):
-    """
-    Compute p-values and z-scores for observed max deviations.
-
-    Parameters:
-        max_d (array-like): Observed maximum values
-        max_rand_d (array-like): Randomized max values (null distribution)
-        use_direct_quant (bool): If True, use empirical quantiles
-
-    Returns:
-        p_vals (np.ndarray): p-values
-        z_scores (np.ndarray): z-scores
-    """
-    max_d = np.atleast_1d(max_d)
-    max_rand_d = np.unique(np.sort(np.asarray(max_rand_d)))
-    if max_rand_d.size == 0:
-        raise ValueError("max_rand_d must not be empty.")
-
-    p_vals = np.full(max_d.shape, np.nan)
-
-    if use_direct_quant:
-        N = len(max_rand_d)
-        for i, val in enumerate(max_d):
-            if np.isnan(val) or val < max_rand_d[0]:
-                p_vals[i] = 1
-            elif np.isinf(val) or val > max_rand_d[-1]:
-                p_vals[i] = 1 / (1 + N)
-            else:
-                # Empirical rank-based interpolation
-                interp = interp1d(max_rand_d, np.arange(1, N + 1), kind='linear', fill_value='extrapolate')
-                value_rank = interp(val)
-                p_vals[i] = 1 - (value_rank / (1 + N))
-
-        z_scores = -norm.ppf(p_vals / 2)
-    else:
-        rand_mu = np.mean(max_rand_d)
-        rand_var = np.var(max_rand_d)
-        p_vals, z_scores, _, _ = get_gumbel(rand_mu, rand_var, max_d)
-
-    return p_vals, z_scores
-
-def get_gumbel(mean_val, var_val, x_vals):
-    """
-    Compute p-values and z-scores for values under a fitted Gumbel distribution.
-
-    Parameters:
-        mean_val (float): Mean of the maximum value distribution
-        var_val (float): Variance of the maximum value distribution
-        x_vals (array-like): Observed maximum value(s)
-
-    Returns:
-        p_vals (np.ndarray): p-values under the Gumbel distribution
-        z_scores (np.ndarray): Corresponding z-scores
-        mode (float): Gumbel mode parameter
-        beta (float): Gumbel scale parameter
-    """
-    x_vals = np.asarray(x_vals)
-    euler_mascheroni = 0.5772156649015329  # Euler–Mascheroni constant
-
-    # Estimate Gumbel parameters from mean and variance
-    beta = np.sqrt(6 * var_val) / np.pi
-    mode = mean_val - beta * euler_mascheroni
-
-    # Gumbel CDF
-    gumbel_cdf = np.exp(-np.exp(-(x_vals - mode) / beta))
-    p_vals = 1 - gumbel_cdf
-
-    # Initial z-score conversion
-    with np.errstate(divide='ignore'):
-        z_scores = -norm.ppf(p_vals / 2)
-
-    # Handle infinite z-scores by re-approximating p
-    inf_mask = np.isinf(z_scores)
-    if np.any(inf_mask):
-        p_vals[inf_mask] = np.exp((mode - x_vals[inf_mask]) / beta)
-        z_scores[inf_mask] = -norm.ppf(p_vals[inf_mask] / 2)
-
-    return p_vals, z_scores, mode, beta
 
 def calc_temp_diff2(spikes_per_trial1, spikes_per_trial2, use_dur, use_fast_interp=False):
     """
@@ -600,7 +635,6 @@ def fillnans(vec, int_sp, int_t):
 
     return vec
 
-#from concurrent.futures import ThreadPoolExecutor
 
 def run_swap_bootstraps(spikes_per_event1, spikes_per_event2, use_dur,
                         resamp_num, use_par_pool=False, use_fast_interp=False):
@@ -662,6 +696,7 @@ def run_swap_bootstraps(spikes_per_event1, spikes_per_event2, use_dur,
             peaks_rand_d[i] = peak
 
     return peaks_rand_d, resamp_d, resamp_t
+
 
 def make_latenzy2_figs(s_latenzy2, spike_times1, event_times1, spike_times2, event_times2, use_dur, make_plots):
     """
@@ -802,32 +837,3 @@ def make_latenzy2_figs(s_latenzy2, spike_times1, event_times1, spike_times2, eve
     return axs
 
 
-def my_randperm(n, k=None, seed=1):
-    """
-    Deterministic random permutation compatible with MATLAB my_randperm.
-
-    Parameters
-    ----------
-    n : int
-        Number of elements to permute (0-indexed in Python)
-    k : int, optional
-        Number of elements to return. If None, returns all n elements.
-    seed : int, optional
-        Random seed for reproducibility.
-
-    Returns
-    -------
-    ind : ndarray
-        Random permutation indices (0-indexed to match Python).
-    """
-    if seed is not None:
-        rng = np.random.Generator(np.random.MT19937(seed))
-    else:
-        rng = np.random.default_rng()
-
-    if k is None:
-        k = n
-
-    # generate deterministic permutation
-    perm = np.argsort(rng.random(n))
-    return perm[:k]
