@@ -10,11 +10,6 @@ You can read our preprint describing these methods here: https://www.biorxiv.org
 ## Estimating response latencies with ***`latenZy`***
 ***`latenZy`*** is designed to estimate **when neural responses begin following discrete events** (e.g., stimulus onset) by detecting event-locked changes in spiking rates. 
 
-**Python installation:**
-```shell
-cd python
-pip install .
-```
 
 **Python example:**
 ```python
@@ -57,6 +52,12 @@ fprintf('Estimated latency: %.2f ms\n', latency);
 
 ![Estimation example](example_figs/latenzy2_ex.png)
 *Detecting the onset of spiking divergence using `latenZy2` (Python example) Red = estimate.*
+
+**Python installation:**
+```shell
+cd python
+pip install .
+```
 
 ## Preparing your data
 ***`latenZy`*** requires continuous spike and event times in absolute timestamps. If your data is trial-aligned (spikes relative to stimulus onset) and lacks original event times, you must reconstruct absolute spike times and provide the corresponding event timestamps. ***`latenZy2`*** accepts trial-aligned data directly. See the [Preprocessing guidelines](./data_preparation.md) for detailed instructions. 
