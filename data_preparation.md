@@ -2,7 +2,6 @@
 **Contents:** 
 - Preparing trial-aligned data for ***latenZy***
 - Using ***latenZy2*** with trial-aligned spike data
-- Excluding a fixed window across event repetitions
 
 ## Preparing trial-aligned data for ***`latenZy`***
 ***`latenZy`*** requires spike and event times as continuous, absolute timestamps. If your data is trial-aligned (e.g., spikes relative to stimulus onset) and you do not have the original event times, you can simulate them by assigning large, fixed offsets between repetitions (e.g., 100s apart):
@@ -77,80 +76,6 @@ latency, s_latenzy2 = latenzy2(spike_times1, [], spiketimes2, [], use_dur=[0, 1]
 **MATLAB example:**
 ```matlab
 [latency, sLatenzy2] = latenzy2(spikeTimes1, [], spikeTimes2, [], [0 1]);
-```
-
-## Excluding a fixed window across event repetitions
-In certain situations, it is necessary to exclude a fixed time window relative to the event times, such as when stimulation artifacts are present. Simply removing all spikes within this window is insufficient, because  *`latenZy`* detects any deviations in spiking activity. Removing spikes in this way can create a time-locked decrease that may become significant under specific conditions. A better approach is to **remove the artifact period and stitch the remaining segments together**.
-
-**Example:**<br>
-![Artifact example](example_figs/latenzy_artifact.png)<br>
-*^The spikes between ~0-50ms are artifactual and interfere with latency estimation.*
-
-![Artifact example](example_figs/latenzy_artifact_cut.png)<br>
-*^Removing all spikes within this window creates another artifactual, time-locked deviation (peak in light blue curve).*
-
-![Artifact example](example_figs/latenzy_artifact_rem.png)<br>
-*^Removing all spikes and stitching the valid periods (by shifting spikes to the right<sup>†</sup>) overcomes this.*<br>  
-<sup>†</sup>We shift spikes to the right in this case because we're interested in post-stimulation spiking activity, as is probably the case for most who encounter this situation.
-
-**Here's an example of how to do this in MATLAB:**
-```matlab
-spikeTimes = ...
-eventTimes = ...
-useDur = [-0.1 0.5];      % Analysis window (relative to event)
-cutWin = [0 0.05];        % Artifact window to exclude
-
-%validate inputs
-if isempty(spikeTimes) || isempty(eventTimes)
-    error('Spike times or event times are empty');
-end
-
-%align spikes relative to each event (getRelSpikeTimes is a latenzy dependency)
-[~, trialSpikes] = getRelSpikeTimes(spikeTimes, eventTimes, useDur);
-
-%remove spikes inside artifact window for each trial
-trialSpikesCut = cellfun(@(x) x(x < cutWin(1) | x > cutWin(2)), trialSpikes, 'UniformOutput', false);
-
-%shift spikes before artifact window rightwards to close the gap
-artifactDur = diff(cutWin);  % Duration of artifact window (positive scalar)
-trialSpikesShifted = cellfun(@(x) [x(x < cutWin(1)) + artifactDur; x(x > cutWin(2))], trialSpikesCut, 'UniformOutput', false);
-
-%convert shifted spikes back to absolute times and concatenate
-allCleanSpikesCell = cell(size(trialSpikesShifted));
-for i = 1:length(trialSpikesShifted)
-    spikesRel = trialSpikesShifted{i};
-    if ~isempty(spikesRel)
-        allCleanSpikesCell{i} = spikesRel + eventTimes(i);
-    else
-        allCleanSpikesCell{i} = [];
-    end
-end
-allCleanSpikes = sort(cell2mat(allCleanSpikesCell));
-
-%adjust analysis window for compressed timeline (due to artifact removal)
-adjustedUseDur = useDur;
-if cutWin(2) > useDur(1) && cutWin(1) < useDur(2)
-    adjustedUseDur(1) = useDur(1) + artifactDur;  % compress start of window
-end
-
-%estimate latency on cleaned spikes with restrictNeg=true
-[latency, ~] = latenzy(allCleanSpikes, eventTimes, adjustedUseDur, [],[],[],[],[],[],true,1);
-fprintf('Estimated latency (compressed timeline): %.4f s\n', latency);
-
-%adjust latency back to original timeline if possible
-if isnan(latency)
-    fprintf('No significant latency detected\n');
-    adjustedLatency = NaN;
-elseif latency <= cutWin(1) + artifactDur
-    adjustedLatency = latency - artifactDur;
-    fprintf('Adjusted latency (original timeline, before artifact window): %.4f s\n', adjustedLatency);
-elseif latency >= cutWin(2)
-    adjustedLatency = latency;
-    fprintf('Adjusted latency (original timeline, after artifact window): %.4f s\n', adjustedLatency);
-else
-    fprintf('Latency falls within artifact window and cannot be accurately mapped\n');
-    adjustedLatency = NaN;
-end
 ```
 
 
