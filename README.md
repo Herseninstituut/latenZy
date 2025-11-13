@@ -56,7 +56,7 @@ fprintf('Estimated latency: %.2f ms\n', latency);
 **Python installation:**
 ```shell
 cd python
-pip install .
+pip install -e.
 ```
 
 ## Preparing your data
