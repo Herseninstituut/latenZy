@@ -4,7 +4,7 @@ Welcome to the ***latenZy*** repository — a Python and MATLAB toolbox containi
 
 These methods leverage the cumulative distribution of spike times to detect time-locked changes in neural firing without relying on predefined time bins. Through an iterative process that identifies statistically significant deviations from a linear baseline—whether aligned to a single event or contrasting experimental conditions—this framework provides robust, data-driven estimates of when neural activity begins to change, regardless of the complexity of the response pattern.
 
-You can read our preprint describing these methods here: https://www.biorxiv.org/content/10.1101/2025.06.30.662308v1
+You can read our paper describing these methods here: https://journals.physiology.org/doi/abs/10.1152/jn.00332.2025?doi=10.1152/jn.00332.2025
 
 
 ## Estimating response latencies with ***`latenZy`***
