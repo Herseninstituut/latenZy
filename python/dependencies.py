@@ -835,7 +835,7 @@ def make_latenzy2_figs(s_latenzy2, spike_times1, event_times1, spike_times2, eve
     
     axs[5].set_xlabel('Time from event (s)')
     axs[5].set_ylabel('Deviation (Δcount)')
-    axs[5].set_title(f'Real + shuffled data (={pvals_peak[lat_idx[0]][0]:.4f})')
+    axs[5].set_title(f'Real + shuffled data (p={pvals_peak[lat_idx[0]][0]:.4f})')
     axs[5].tick_params(direction='out')
 
     fig.suptitle(f'latenZy2 estimate = {latency:.4f}s', fontweight='bold')
