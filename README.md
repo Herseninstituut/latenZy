@@ -27,7 +27,8 @@ fprintf('Estimated latency: %.2f ms\n', latency);
 
 `use_dur`/`useDur` is a window around the event times (e.g., [-0.1 1] or 1 when only including post-event time)
 
-
+![Estimation example](example_figs/latenzy_ex_v2.png)
+*Detecting neural spiking onset using `latenZy` (Python example). Red = estimate.*
 
 
 ## Estimating when spiking starts to diverge between conditions with ***`latenZy2`***
@@ -49,7 +50,8 @@ fprintf('Estimated latency: %.2f ms\n', latency);
 
 `use_dur`/`useDur` is a window around the event times (e.g., [-0.1 1] or 1 when only including post-event time)
 
-
+![Estimation example](example_figs/latenzy2_ex_v2.png)
+*Detecting the onset of spiking divergence using `latenZy2` (Python example) Red = estimate.*
 
 **Python installation:**
 ```shell
