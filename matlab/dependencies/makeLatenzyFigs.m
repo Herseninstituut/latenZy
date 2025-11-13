@@ -19,7 +19,8 @@ meanRealDiff = sLatenzy.meanRealDiff;
 randDiff = sLatenzy.randDiff;
 randTime = sLatenzy.randTime;
 meanRandDiff = sLatenzy.meanRandDiff;
-peakZ = sLatenzy.peakZ;
+pValPeaks = sLatenzy.pValsPeak;
+% peakZ = sLatenzy.peakZ;
 latenzyIdx = sLatenzy.latenzyIdx;
 
 numIters = numel(peakTimes);
@@ -84,7 +85,7 @@ else, xlim([useDur(1)  peakTimes(find(latenzyIdx)-1)]);end
 set(gca,'box','off','TickDir','out');
 xlabel('Time from event (s)');
 ylabel('Deviation (Δfraction)');
-title(sprintf('Real data + jitters, mean-subtracted (Z=%.1f)',peakZ(latenzyIdx)));
+title(sprintf('Real + jittered data (p=%.4f)',pValPeaks(latenzyIdx)));
 
 %add title
 sgtitle(sprintf('latenZy estimate = %.4fs', latency), 'FontWeight', 'bold');

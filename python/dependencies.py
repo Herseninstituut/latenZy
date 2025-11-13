@@ -445,7 +445,9 @@ def make_latenzy_figs(s_latenzy, spike_times, event_times, use_dur, make_plots):
     rand_diff = s_latenzy['randDiff']
     rand_time = s_latenzy['randTime']
     mean_rand_diff = s_latenzy['meanRandDiff']
-    peak_z = s_latenzy['peakZ']
+    #peak_z = s_latenzy['peakZ']
+    pvals_peak = s_latenzy['pValsPeak']
+    
     latenzy_idx = s_latenzy['latenzyIdx']
 
     num_iters = len(peak_times)
@@ -508,7 +510,7 @@ def make_latenzy_figs(s_latenzy, spike_times, event_times, use_dur, make_plots):
     axs[2].tick_params(direction='out')
 
 
-    # Real + shuffled deviation
+    # Real + jittered deviation
     axs[3].cla()
     lat_idx = np.where(latenzy_idx)[0]
     for i in range(len(rand_diff[0])):
@@ -529,7 +531,7 @@ def make_latenzy_figs(s_latenzy, spike_times, event_times, use_dur, make_plots):
         axs[3].set_xlim([use_dur[0], peak_times[idx - 1]])
     axs[3].set_xlabel('Time from event (s)')
     axs[3].set_ylabel('Deviation (Δfraction)')
-    axs[3].set_title(f'Real data + jitters, mean-subtracted (z={peak_z[lat_idx[0]][0]:.1f})')
+    axs[3].set_title(f'Real + jittered data (p={pvals_peak[lat_idx[0]][0]:.4f})')
     axs[3].tick_params(direction='out')
 
     fig.suptitle(f'latenZy estimate = {latency:.4f}s', fontweight='bold')
@@ -726,7 +728,8 @@ def make_latenzy2_figs(s_latenzy2, spike_times1, event_times1, spike_times2, eve
     rand_diff = s_latenzy2['randDiff']
     rand_time = s_latenzy2['randTime']
     mean_rand_diff = s_latenzy2['meanRandDiff']
-    peak_z = s_latenzy2['peakZ']
+    #peak_z = s_latenzy2['peakZ']
+    pvals_peak = s_latenzy2['pValsPeak']
     latenzy_idx = s_latenzy2['latenzyIdx']
 
     num_iters = len(peak_times)
@@ -827,7 +830,7 @@ def make_latenzy2_figs(s_latenzy2, spike_times1, event_times1, spike_times2, eve
     
     axs[5].set_xlabel('Time from event (s)')
     axs[5].set_ylabel('Deviation (Δcount)')
-    axs[5].set_title(f'Real data + resamplings (z={peak_z[lat_idx[0]][0]:.1f})')
+    axs[5].set_title(f'Real + shuffled data (={pvals_peak[lat_idx[0]][0]:.4f})')
     axs[5].tick_params(direction='out')
 
     fig.suptitle(f'latenZy2 estimate = {latency:.4f}s', fontweight='bold')

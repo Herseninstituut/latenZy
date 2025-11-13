@@ -20,7 +20,8 @@ meanRealDiff = sLatenzy2.meanRealDiff;
 randDiff = sLatenzy2.randDiff;
 randTime = sLatenzy2.randTime;
 meanRandDiff = sLatenzy2.meanRandDiff;
-peakZ = sLatenzy2.peakZ;
+% peakZ = sLatenzy2.peakZ;
+pValsPeak = sLatenzy2.pValsPeak;
 latenzyIdx = sLatenzy2.latenzyIdx;
 
 numIters = numel(peakTimes);
@@ -147,7 +148,7 @@ else, xlim([useDur(1)  peakTimes(find(latenzyIdx)-1)]);end
 set(gca,'box','off','TickDir','out');
 xlabel('Time from event (s)');
 ylabel('Deviation (Δcount)');
-title(sprintf('Real data + resamplings, mean-subtracted (Z=%.1f)',peakZ(latenzyIdx)));
+title(sprintf('Real + shuffled data (p=%.4f)',pValsPeak(latenzyIdx)));
 
 %add title
 sgtitle(sprintf('latenZy2 estimate = %.4fs', latency), 'FontWeight', 'bold');
