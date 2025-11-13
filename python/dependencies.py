@@ -140,7 +140,12 @@ def get_pseudo_times(spike_times, event_times, use_dur=None, discard_edges=False
             pseudo_spike_t.append(append)
 
     # Recombine
-    pseudo_spike_times = np.concatenate([p for p in pseudo_spike_t if p.size > 0]) if pseudo_spike_t else np.array([])
+    valid_arrays = [p for p in pseudo_spike_t if p.size > 0]
+    if valid_arrays:
+        pseudo_spike_times = np.concatenate(valid_arrays)
+    else:
+        pseudo_spike_times = np.array([])
+        
     pseudo_event_times = pseudo_event_times + abs(use_dur[0])
 
     return pseudo_spike_times, pseudo_event_times

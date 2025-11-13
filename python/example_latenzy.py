@@ -27,9 +27,9 @@ in_primary_visual = np.array(['primary visual' in c.Area.lower() for c in cluste
 idx_incl = (is_good | low_contam) & in_primary_visual
 spike_times_agg = [c.SpikeTimes for i, c in enumerate(clusters) if idx_incl[i]]
 event_times = sAP.cellBlock[3].vecStimOnTime  
-spike_times = spike_times_agg[15]
+spike_times = spike_times_agg[42] #15
 
-result,s_latenzy = latenzy(spike_times, event_times, use_dur=1, 
+result,s_latenzy = latenzy(spike_times, event_times[0:100], use_dur=1, 
             resamp_num=100, jitter_size=2,
             peak_alpha=0.05, do_stitch=True, use_par_pool=False,
             use_direct_quant=False, restrict_neg=True, make_plots=1)
