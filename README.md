@@ -14,13 +14,13 @@ You can read our paper describing these methods here: https://doi.org/10.1152/jn
 ```python
 from latenzy import latenzy
 
-latency, s_latenzy = latenzy(spike_times, event_times, use_dur)
+t, s_latenzy = latenzy(spike_times, event_times, use_dur)
 print(f"Estimated latency: {latency:.2f} ms")
 ```
 
 **MATLAB example:**
 ```matlab
-[latency, sLatenzy] = latenzy(spikeTimes, eventTimes, useDur);
+[t, sLatenzy] = latenzy(spikeTimes, eventTimes, useDur);
 fprintf('Estimated latency: %.2f ms\n', latency);
 ```
 
@@ -37,13 +37,13 @@ fprintf('Estimated latency: %.2f ms\n', latency);
 ```python
 from latenzy import latenzy2
 
-latency, s_latenzy2 = latenzy2(spike_times1, event_times1, spike_times2, event_times2, use_dur)
+t, s_latenzy2 = latenzy2(spike_times1, event_times1, spike_times2, event_times2, use_dur)
 print(f"Estimated latency: {latency:.2f} ms")
 ```
 
 **MATLAB example:**
 ```matlab
-[latency, sLatenzy2] = latenzy2(spikeTimes1, eventTimes1, spikeTimes2, eventTimes2, useDur);
+[t, sLatenzy2] = latenzy2(spikeTimes1, eventTimes1, spikeTimes2, eventTimes2, useDur);
 fprintf('Estimated latency: %.2f ms\n', latency);
 ```
 
