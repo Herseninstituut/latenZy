@@ -1,6 +1,6 @@
 function [latency,sLatenzy] = latenzy(spikeTimes,eventTimes,useDur,resampNum,jitterSize,peakAlpha,doStitch,useParPool,useDirectQuant,restrictNeg,makePlots)
 % get event-related spiking latency, syntax:
-%   [respLatency,sLatenzy] = latenzy(spikeTimes,eventTimes,useDur,resampNum,jitterSize,minPeakZ,doStitch,useParPool,useDirectQuant,restrictNeg,makePlots)
+%   [latency,sLatenzy] = latenzy(spikeTimes,eventTimes,useDur,resampNum,jitterSize,minPeakZ,doStitch,useParPool,useDirectQuant,restrictNeg,makePlots)
 %   
 %   inputs:
 %   - spikeTimes: [S x 1]: spike times (s)
