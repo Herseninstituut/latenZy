@@ -18,7 +18,7 @@ function [latency,sLatenzy] = latenzy(spikeTimes,eventTimes,useDur,resampNum,jit
 %   - makePlots: integer, plotting switch (0=none, 1=raster+traces, 2=traces only, default: 0)
 %
 %   outputs:
-%   - respLatency: response latency (s) (NaN when no latency could be estimated)
+%   - latency: response latency (s) (NaN when no latency could be estimated)
 %   - sLatenzy: structure with fields:
 %       - latency: response latency (s)
 %       - peakTimes: detected peak times, one per iter (s)
