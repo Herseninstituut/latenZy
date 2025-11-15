@@ -1,6 +1,6 @@
 # The *latenZy* repository
 
-Welcome to the ***latenZy*** repository — a Python and MATLAB toolbox containing two non-parametric, binning-free methods for estimating the onset of neural spiking activity with high temporal precision: ***`latenZy`*** and ***`latenZy2`***. 
+Welcome to the ***latenZy*** repository—a Python and MATLAB toolbox containing two non-parametric, binning-free methods for estimating the onset of neural spiking activity with high temporal precision: ***`latenZy`*** and ***`latenZy2`***. 
 
 These methods leverage the cumulative distribution of spike times to detect time-locked changes in neural firing without relying on predefined time bins. Through an iterative process that identifies statistically significant deviations from a linear baseline—whether aligned to a single event or contrasting experimental conditions—this framework provides robust, data-driven estimates of when neural activity begins to change, regardless of the complexity of the response pattern.
 
