@@ -23,7 +23,7 @@ function [latency,sLatenzy2] = latenzy2(spikeTimes1,eventTimes1,spikeTimes2,even
 %   - set useDur to match (or use a smaller window) (default: [0    max(spikeTimes)
 %
 %   outputs:
-%   - respLatency: response latency (s) (NaN when no latency could be estimated)
+%   - latency: response latency (s) (NaN when no latency could be estimated)
 %   - sLatenzy2: structure with fields:
 %       - latency: response latency (s)
 %       - peakTimes: detected peak times, one per iter (s)
