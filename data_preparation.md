@@ -70,12 +70,12 @@ To do this:
 
 **Python example:**
 ```python
-latency, s_latenzy2 = latenzy2(spike_times1, [], spiketimes2, [], use_dur=[0, 1])
+t, s_latenzy2 = latenzy2(spike_times1, [], spiketimes2, [], use_dur=[0, 1])
 ```
 
 **MATLAB example:**
 ```matlab
-[latency, sLatenzy2] = latenzy2(spikeTimes1, [], spikeTimes2, [], [0 1]);
+[t, sLatenzy2] = latenzy2(spikeTimes1, [], spikeTimes2, [], [0 1]);
 ```
 
 
