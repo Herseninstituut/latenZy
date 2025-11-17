@@ -15,13 +15,13 @@ These methods leverage the cumulative distribution of spike times to detect time
 from latenzy import latenzy
 
 t, s_latenzy = latenzy(spike_times, event_times, use_dur)
-print(f"Estimated latency: {latency:.2f} ms")
+print(f"Estimated latency: {t:.2f} ms")
 ```
 
 **MATLAB example:**
 ```matlab
 [t, sLatenzy] = latenzy(spikeTimes, eventTimes, useDur);
-fprintf('Estimated latency: %.2f ms\n', latency);
+fprintf('Estimated latency: %.2f ms\n', t);
 ```
 
 `use_dur`/`useDur` is a window around the event times (e.g., [-0.1 1] or 1 when only including post-event time)
@@ -38,13 +38,13 @@ fprintf('Estimated latency: %.2f ms\n', latency);
 from latenzy import latenzy2
 
 t, s_latenzy2 = latenzy2(spike_times1, event_times1, spike_times2, event_times2, use_dur)
-print(f"Estimated latency: {latency:.2f} ms")
+print(f"Estimated latency: {t:.2f} ms")
 ```
 
 **MATLAB example:**
 ```matlab
 [t, sLatenzy2] = latenzy2(spikeTimes1, eventTimes1, spikeTimes2, eventTimes2, useDur);
-fprintf('Estimated latency: %.2f ms\n', latency);
+fprintf('Estimated latency: %.2f ms\n', t);
 ```
 
 `use_dur`/`useDur` is a window around the event times (e.g., [-0.1 1] or 1 when only including post-event time)
