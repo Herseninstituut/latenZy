@@ -37,10 +37,56 @@ function [latency,sLatenzy] = latenzy(spikeTimes,eventTimes,useDur,resampNum,jit
 %       - handleFigs: figure handles
 %
 % history:
+%   v0.9.0 - 6 January 2025
+%   - created by Robin Haak
+%   v1.0.0 - 30 June 2025
+%   - 
+%   v1.0.1 - 10 April 2026
+function [latency,sLatenzy] = latenzy(spikeTimes,eventTimes,useDur,resampNum,jitterSize,peakAlpha,doStitch,useParPool,useDirectQuant,restrictNeg,makePlots)
+% get event-related spiking latency, syntax:
+%   [latency,sLatenzy] = latenzy(spikeTimes,eventTimes,useDur,resampNum,jitterSize,minPeakZ,doStitch,useParPool,useDirectQuant,restrictNeg,makePlots)
+%   
+%   inputs:
+%   - spikeTimes: [S x 1]: spike times (s)
+%   - eventTimes: [T x 1]: event times (s)
+%   - useDur: scalar or [N x 2], time to include after/around event times (s)
+%       - if a scalar is provided, it is interpreted as the duration after each event, with the start time set automatically to zero
+%       - default: [0, min(diff(eventtimes))], i.e., from the event time to the minimum interval between events
+%   - resampNum: integer, number of resamples (default: 100)
+%   - jitterSize: scalar, temporal jitter window relative to useDur (s) (default: 2)
+%   - peakAlpha: scalar, significance threshold (default: 0.05)
+%   - doStitch: boolean flag, perform data stitching, highly recommended! (default: true)
+%   - useParPool: boolean flag, use parallel pool for resamples (default: true, but only when parallel pool is already active!)
+%   - useDirectQuant: boolean flag, use the empirical null-distribution rather than the Gumbel approximation (default: false)
+%   - restrictNeg: boolean flag, restrict negative latencies (default: true)
+%   - makePlots: integer, plotting switch (0=none, 1=raster+traces, 2=traces only, default: 0)
+%
+%   outputs:
+%   - latency: response latency (s) (NaN when no latency could be estimated)
+%   - sLatenzy: structure with fields:
+%       - latency: response latency (s)
+%       - peakTimes: detected peak times, one per iter (s)
+%       - peakVals: detected peak values, one per iter
+%       - realFrac: see plotting function for details
+%       - fracLin: idem
+%       - realDiff: idem
+%       - realTime: idem
+%       - meanRealDiff: idem
+%       - randDiff: idem
+%       - randTime: idem
+%       - meanRandDiff: idem
+%       - pVals: p-values for the observed peak maxima
+%       - peakZ: two-tailed z-scores corresponding to the p-values
+%       - latenzyIdx: use to index arrays above
+%       - handleFigs: figure handles
+%
+% history:
 %   v0.9 - 6 January 2025
 %   - created by Robin Haak
 %   v1.0 - 30 June 2025
-
+%   v1.0.1 - 10 April 2026
+%   - fixed refinement bug where valid peaks could be discarded when numel(realDiff) < 3 [identified and reported by @jiumao2]
+        
 %% prep
 %ensure correct orientation
 spikeTimes = spikeTimes(:);
@@ -167,7 +213,11 @@ while doContinue
     %get temporal deviation
     [realDiff,realTime,spikeFrac,fracLinear] = calcTempDiff(pseudoSpikeTimes,pseudoEventTimes,thisMaxDur);
     if numel(realDiff) < 3
-        return
+        if ~isempty(keepPeaks) && any(keepPeaks)
+            break
+        else
+            return
+        end
     end
     
     %get largest deviation
