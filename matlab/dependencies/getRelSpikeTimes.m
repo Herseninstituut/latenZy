@@ -45,6 +45,6 @@ relSpikeTimes = sort(cell2vec(spikesPerEvent));
 
 %% if requested, add artificial spikes to cover full epoch
 if addArtifSpikes && ~isempty(relSpikeTimes)
-    relSpikeTimes = unique([useDur(1); relSpikeTimes; useDur(2)]);
+    relSpikeTimes = [useDur(1); relSpikeTimes; useDur(2)];
 end
 
