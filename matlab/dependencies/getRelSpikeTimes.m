@@ -15,6 +15,8 @@ function [relSpikeTimes,spikesPerEvent] = getRelSpikeTimes(spikeTimes,eventTimes
 %   v0.9 - 6 January 2025
 %   - created by Robin Haak
 %   v1.0 - 30 June 2025
+%   v1.0.1 - 11 May 2025
+%   - removed unique() call from artificial spikes block
 
 %% prep
 %ensure correct orientation
