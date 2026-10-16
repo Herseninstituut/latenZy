@@ -56,7 +56,7 @@ fprintf('Estimated latency: %.2f ms\n', t);
 *Detecting the onset of spiking divergence using `latenZy2` (Python example) Red = estimate.*
 
 ## Changes
-**v1.1.0 (October 2026): fix to the null statistic; results change.** Before v1.1.0, the null distribution used signed rather than absolute mean-subtracted peak deviations (Eq. 17 of the paper specifies the absolute value). As a result, the default Gumbel-based test was conservative (about 1% false positives at α = 0.05), and the direct-quantile option (`use_direct_quant`/`useDirectQuant`) was liberal (about 10%). With the fix, both run close to the nominal α. Re-running analyses made with earlier versions will detect more responsive units, mainly weakly responsive ones, and may give earlier latency estimates. Please report the version you used.
+**v1.1.0 (October 2026): fix to the null statistic; results change.** Before v1.1.0, the null distribution used signed rather than absolute mean-subtracted peak deviations (Eq. 17 of the paper specifies the absolute value). As a result, the default Gumbel-based test was conservative, and the direct-quantile option (`use_direct_quant`/`useDirectQuant`) was liberal. With the fix, both run close to the nominal α. Re-running analyses made with earlier versions will detect more responsive units, mainly weakly responsive ones, and may give earlier latency estimates.
 
 ## Python installation
 To install this package globally in editable mode so you can use it anywhere, run:
@@ -70,13 +70,7 @@ pip install -e.
 ***`latenZy`*** requires continuous spike and event times in absolute timestamps. If your data is trial-aligned (spikes relative to stimulus onset) and lacks original event times, you must reconstruct absolute spike times and provide the corresponding event timestamps. ***`latenZy2`*** accepts trial-aligned data directly. See the [preprocessing guidelines](./data_preparation.md) for detailed instructions. 
 
 ## Dependencies
-The Python implementation requires the following packages to work:
-- NumPy
-- SciPy
-- Matplotlib
-- Optional: concurrent.futures to reduce computation time
+- Python: NumPy, SciPy, Matplotlib
+- MATLAB: Statistics and Machine Learning Toolbox; optionally Parallel Computing Toolbox (for `useParPool`)
 
-The MATLAB implementation requires the following Mathworks toolboxes to work:
-- Signal Processing Toolbox
-- Optional: Parallel Computing Toolbox to reduce computation time
 
