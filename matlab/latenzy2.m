@@ -50,6 +50,12 @@ function [latency,sLatenzy2] = latenzy2(spikeTimes1,eventTimes1,spikeTimes2,even
 %   - fixed refinement bug where valid peaks could be discarded when numel(realDiff) < 3 [identified and reported by @jiumao2]
 %   v1.0.2 - 11 May 2026
 %   - removed obsolete unique() call from getRelSpikeTimes() dependency
+%   v1.1.0 - 16 October 2026
+%   - fixed null statistic: null peaks are now absolute mean-subtracted deviations,
+%     abs(peaksRand-meanRandDiff), matching the observed statistic and Eq. 17 of the paper.
+%     Previously the default (Gumbel) test was conservative (~1% false positives at alpha = 0.05)
+%     and the direct-quantile test liberal (~10%). Results change: more units are detected,
+%     and some latencies are earlier.
               
 %% prep
 %check for alternative input
@@ -236,7 +242,7 @@ while doContinue
     [peaksRand,randDiff,randTime] = runSwapBootstraps(spikesPerEvent1,spikesPerEvent2,...
         thisMaxDur,resampNum,useParPool,useFastInterp);
     meanRandDiff = cellfun(@(x)mean(x),randDiff);
-    peaksRandSub = peaksRand-meanRandDiff;
+    peaksRandSub = abs(peaksRand-meanRandDiff);
 
     %compute significance
     [pValPeak,peakZ] = computePval(abs(realPeakSub),peaksRandSub(~isnan(peaksRandSub)),useDirectQuant);

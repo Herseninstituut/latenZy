@@ -20,6 +20,12 @@ Updates:
     - Removed obsolete np.unique() call from get_rel_spike_times() dependency
     v1.0.3 - 26 June 2026
     - Replaced O(S) `np.where` scans with `np.searchsorted` in `get_pseudo_times()` and `get_rel_spike_times()`
+    v1.1.0 - 16 October 2026
+    - Fixed null statistic: null peaks are now absolute mean-subtracted deviations,
+      |peaks_rand - mean_rand_diff|, matching the observed statistic and Eq. 17 of Haak & Heimel (2025).
+      Previously the default (Gumbel) test was conservative (~1% false positives at alpha = 0.05)
+      and the direct-quantile test liberal (~10%). Results change: more units are detected, and
+      some latencies are earlier.
           
 """
 
@@ -172,7 +178,7 @@ def latenzy(spike_times,
 
         mean_rand_diff = np.array([np.mean(rd) if rd is not None and len(rd) > 0 else np.nan for rd in rand_diff])
 
-        peaks_rand_sub = peaks_rand - mean_rand_diff
+        peaks_rand_sub = np.abs(peaks_rand - mean_rand_diff)
 
         # Compute significance
         p_val_peak, peak_z = compute_pval(np.abs(real_peak_sub), peaks_rand_sub[~np.isnan(peaks_rand_sub)], use_direct_quant)
@@ -383,7 +389,7 @@ def latenzy2(
             spikes1, spikes2, this_max_dur, resamp_num, use_par_pool
         )
         mean_rand_diff = np.array([np.mean(rd) if rd is not None and len(rd) > 0 else np.nan for rd in rand_diff])
-        peaks_rand_sub = peaks_rand - mean_rand_diff
+        peaks_rand_sub = np.abs(peaks_rand - mean_rand_diff)
 
         # Compute significance
         p_val_peak, peak_z = compute_pval(abs(real_peak_sub), peaks_rand_sub[~np.isnan(peaks_rand_sub)], use_direct_quant)

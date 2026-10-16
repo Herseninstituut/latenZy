@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="latenzy",
-    version="0.1.0",
+    version="1.1.0",
     description="Python tools for latenZy analysis",
     long_description="latenzy.py\n\n"
                      "Contains latenzy and latenzy2 to compute latencies for spiking responses\n"

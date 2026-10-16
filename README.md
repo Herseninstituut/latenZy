@@ -55,6 +55,9 @@ fprintf('Estimated latency: %.2f ms\n', t);
 ![Estimation example](example_figs/latenzy2_ex_v2.png)
 *Detecting the onset of spiking divergence using `latenZy2` (Python example) Red = estimate.*
 
+## Changes
+**v1.1.0 (October 2026): fix to the null statistic; results change.** Before v1.1.0, the null distribution used signed rather than absolute mean-subtracted peak deviations (Eq. 17 of the paper specifies the absolute value). As a result, the default Gumbel-based test was conservative (about 1% false positives at α = 0.05), and the direct-quantile option (`use_direct_quant`/`useDirectQuant`) was liberal (about 10%). With the fix, both run close to the nominal α. Re-running analyses made with earlier versions will detect more responsive units, mainly weakly responsive ones, and may give earlier latency estimates. Please report the version you used.
+
 ## Python installation
 To install this package globally in editable mode so you can use it anywhere, run:
 
