@@ -23,9 +23,8 @@ Updates:
     v1.1.0 - 16 October 2026
     - Fixed null statistic: null peaks are now absolute mean-subtracted deviations,
       |peaks_rand - mean_rand_diff|, matching the observed statistic and Eq. 17 of Haak & Heimel (2025).
-      Previously the default (Gumbel) test was conservative (~1% false positives at alpha = 0.05)
-      and the direct-quantile test liberal (~10%). Results change: more units are detected, and
-      some latencies are earlier.
+      Previously the default (Gumbel) test was conservative and the direct-quantile test liberal.
+      Results change: more units are detected, and some latencies are earlier.
           
 """
 
