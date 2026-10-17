@@ -53,9 +53,8 @@ function [latency,sLatenzy2] = latenzy2(spikeTimes1,eventTimes1,spikeTimes2,even
 %   v1.1.0 - 16 October 2026
 %   - fixed null statistic: null peaks are now absolute mean-subtracted deviations,
 %     abs(peaksRand-meanRandDiff), matching the observed statistic and Eq. 17 of the paper.
-%     Previously the default (Gumbel) test was conservative (~1% false positives at alpha = 0.05)
-%     and the direct-quantile test liberal (~10%). Results change: more units are detected,
-%     and some latencies are earlier.
+%     Previously the default (Gumbel) test was conservative and the direct-quantile test liberal.
+%     Results change: more units are detected, and some latencies are earlier.
               
 %% prep
 %check for alternative input
