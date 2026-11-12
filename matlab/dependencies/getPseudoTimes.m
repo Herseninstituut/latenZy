@@ -69,10 +69,11 @@ for thisEvent = 1:eventNum
     %manage overlaps between consecutive windows
     if thisEvent == 1
         pseudoEventT = 0;
-    elseif thisEvent > 1 && duration > (eventT-eventTimes(thisEvent-1))
+    elseif thisEvent > 1 && duration > (eventTimes(thisEvent)-eventTimes(thisEvent-1))
+        %windows overlap: compare event-to-event intervals (not window start vs previous event)
         useSamples = useSamples(~samplesOverlap);
         addT = spikeTimes(useSamples);
-        pseudoEventT = pseudoEventT+eventT-eventTimes(thisEvent-1);
+        pseudoEventT = pseudoEventT+eventTimes(thisEvent)-eventTimes(thisEvent-1);
     else
         pseudoEventT = pseudoEventT+duration;
     end

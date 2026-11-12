@@ -49,6 +49,12 @@ function [latency,sLatenzy] = latenzy(spikeTimes,eventTimes,useDur,resampNum,jit
 %     abs(peaksRand-meanRandDiff), matching the observed statistic and Eq. 17 of the paper.
 %     Previously the default (Gumbel) test was conservative and the direct-quantile test liberal.
 %     Results change: more units are detected, and some latencies are earlier.
+%
+%   v1.1.1 - 12 November 2026
+%   - fixed data stitching for windows starting before the event (useDur(1) < 0). The window start
+%     was compared to the previous event, so windows were treated as overlapping whenever
+%     useDur(2) + 2*|useDur(1)| > ISI, and their edges were counted twice. This inflated false
+%     positives (up to ~100% for constant-rate neurons). Windows starting at 0 are unaffected.
 
 %% prep
 %ensure correct orientation
