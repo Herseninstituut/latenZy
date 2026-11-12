@@ -6,6 +6,8 @@ function [pseudoSpikeTimes, pseudoEventTimes] = getPseudoTimes(spikeTimes,eventT
 %   v0.9 - 6 January 2025
 %   - created by Robin Haak
 %   v1.0 - 30 June 2025
+%   v1.1 - 12 November 2026
+%    -  fixed stitching for pre-event windows (useDur(1) < 0), which double-counted window edges and inflated false positives
 
 %ensure correct orientation
 spikeTimes = sort(spikeTimes(:));
