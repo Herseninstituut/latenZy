@@ -11,9 +11,9 @@ setup(
     author="Robin Haak, Alexander Heimel",
     url="https://github.com/Herseninstituut/latenZy",
     license="GNU General Public License v3 (GPL-3.0)",
-    packages=find_packages('.'),
+    py_modules=["latenzy", "dependencies"],
     package_dir={'': '.'},
-    install_requires=[],
+    install_requires=["numpy", "scipy", "matplotlib"],
     python_requires=">=3.7",
     classifiers=[
         "Programming Language :: Python :: 3",
