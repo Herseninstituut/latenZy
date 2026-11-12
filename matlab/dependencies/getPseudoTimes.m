@@ -110,21 +110,12 @@ if ~discardEdges && ~isempty(firstSample) && firstSample > 1
     end
 end
 
-%add end
+%add end: only spikes not already used by the last window
 if ~discardEdges
-    %find remaining spikes after the last event window
-    lastUsedSample = find(spikeTimes > (eventTimes(end)+duration),1);
-    if isempty(lastUsedSample)
-        %if no spikes are beyond the last event window, take the remaining spikes
-        sampAddEnd = (find(spikeTimes >= eventTimes(end),1)):sampleNum;
-    else
-        %otherwise, consider spikes within the range
-        sampAddEnd = lastUsedSample:sampleNum;
-    end
-
-    %only add end spikes if they exist
+    sampAddEnd = (lastUsedSample+1):sampleNum;
     if ~isempty(sampAddEnd)
-        pseudoSpikeT = cat(2,pseudoSpikeT,{spikeTimes(sampAddEnd)-eventTimes(end)+pseudoEventT});
+        lastWindowT = eventTimes(end)+useDur(1);
+        pseudoSpikeT = cat(2,pseudoSpikeT,{spikeTimes(sampAddEnd)-lastWindowT+pseudoEventT});
     end
 end
 

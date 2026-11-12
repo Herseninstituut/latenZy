@@ -134,25 +134,12 @@ def get_pseudo_times(spike_times, event_times, use_dur=None, discard_edges=False
             prepend_shifted = prepend - prepend[0] + pseudo_t0 - step_begin - np.ptp(prepend)
             pseudo_spike_t.insert(0, prepend_shifted)
 
-    # Add end spikes
+    # Add end spikes (only those not already used by the last window)
     if not discard_edges:
-        # indices = np.where(spike_times > (event_times[-1] + duration))[0]
-        # if indices.size == 0:
-        #     start_idx = np.where(spike_times >= event_times[-1])[0][0]
-        #     samp_add_end = np.arange(start_idx, sample_num)
-        # else:
-        #     samp_add_end = np.arange(indices[0], sample_num)
-        
-        # Use searchsorted() for speed
-        i_after = np.searchsorted(spike_times, event_times[-1] + duration, side='right')
-        if i_after == sample_num:   
-            i_from = np.searchsorted(spike_times, event_times[-1], side='left')
-            samp_add_end = np.arange(i_from, sample_num)
-        else:
-            samp_add_end = np.arange(i_after, sample_num)
-
+        samp_add_end = np.arange(last_used_sample + 1, sample_num)
         if samp_add_end.size > 0:
-            append = spike_times[samp_add_end] - event_times[-1] + pseudo_event_t
+            last_window_t = event_times[-1] + use_dur[0]
+            append = spike_times[samp_add_end] - last_window_t + pseudo_event_t
             pseudo_spike_t.append(append)
 
     # Recombine

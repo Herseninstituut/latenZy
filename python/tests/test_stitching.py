@@ -39,3 +39,18 @@ def test_latenzy_null_negative_window():
         np.random.seed(c)
         hits.append(not np.isnan(latenzy(spikes, events, use_dur=[-0.3, 0.5])[0]))
     assert np.mean(hits) < 0.12, f"false-positive rate {np.mean(hits):.3f}"
+
+
+@pytest.mark.parametrize("use_dur", [[0, 0.8], [-0.3, 0.5], [0, 1.3]])
+def test_stitching_keep_edges_no_duplicates(use_dur):
+    """With discard_edges=False, every spike in a window or outside the first/last window appears exactly once, in order."""
+    rng = np.random.default_rng(1)
+    events = 1 + np.cumsum(1.0 + 0.3 * rng.uniform(-1, 1, 60))
+    spikes = np.sort(rng.uniform(0, events[-1] + 2, 6000))
+    ps, _ = get_pseudo_times(spikes, events, use_dur, discard_edges=False)
+    in_win = np.zeros(spikes.size, bool)
+    for e in events:
+        in_win |= (spikes >= e + use_dur[0]) & (spikes < e + use_dur[1])
+    expected = in_win.sum() + (spikes < events[0] + use_dur[0]).sum() + (spikes >= events[-1] + use_dur[1]).sum()
+    assert np.all(np.diff(ps) >= 0)
+    assert ps.size == expected
