@@ -102,10 +102,11 @@ def get_pseudo_times(spike_times, event_times, use_dur=None, discard_edges=False
         # Overlap and pseudo-event time adjustment
         if this_event == 0:
             pseudo_event_t = 0
-        elif duration > (event_t - event_times[this_event - 1]):
+        elif duration > (event_times[this_event] - event_times[this_event - 1]):
+            # windows overlap: compare event-to-event intervals (not window start vs previous event)
             use_samples = use_samples[~samples_overlap]
             add_t = spike_times[use_samples]
-            pseudo_event_t += event_t - event_times[this_event - 1]
+            pseudo_event_t += event_times[this_event] - event_times[this_event - 1]
         else:
             pseudo_event_t += duration
 

@@ -25,6 +25,12 @@ Updates:
       |peaks_rand - mean_rand_diff|, matching the observed statistic and Eq. 17 of Haak & Heimel (2025).
       Previously the default (Gumbel) test was conservative and the direct-quantile test liberal.
       Results change: more units are detected, and some latencies are earlier.
+
+    v1.1.1 - 12 November 2026
+    - Fixed data stitching for windows starting before the event (use_dur[0] < 0). The window start
+      was compared to the previous event, so windows were treated as overlapping whenever
+      use_dur[1] + 2*|use_dur[0]| > ISI, and their edges were counted twice. This inflated false
+      positives (up to ~100% for constant-rate neurons). Windows starting at 0 are unaffected.
           
 """
 
