@@ -58,7 +58,7 @@ fprintf('Estimated latency: %.2f ms\n', t);
 ## Changes
 **v1.1.0 (October 2026): fix to the null statistic; results change.** Before v1.1.0, the null distribution used signed rather than absolute mean-subtracted peak deviations (Eq. 17 of the paper specifies the absolute value). As a result, the default Gumbel-based test was conservative, and the direct-quantile option (`use_direct_quant`/`useDirectQuant`) was liberal. With the fix, both run close to the nominal α. Re-running analyses made with earlier versions will detect more responsive units, mainly weakly responsive ones, and may give earlier latency estimates.
 
-**v1.1.1 (November 2026): fix to data stitching for pre-event windows.** Before v1.1.1, when the analysis window started before the event (`use_dur[0] < 0` / `useDur(1) < 0`), the window start was compared to the previous event, so windows were treated as overlapping whenever `use_dur[1] + 2·|use_dur[0]| > ISI`, and the edges of neighbouring windows were counted twice. This inflated false positives (up to ~100% for constant-rate neurons). Analyses with windows starting at 0 are unaffected; analyses with a pre-event baseline should be re-run.
+**v1.1.1 (November 2026): fix to data stitching for pre-event windows.** Before v1.1.1, when the analysis window started before the event (`use_dur[0] < 0` / `useDur(1) < 0`), the window start was compared to the previous event, so windows were treated as overlapping whenever `use_dur[1] + 2·|use_dur[0]| > ISI`, and the edges of neighbouring windows were counted twice. This inflated false positives (up to ~100% for constant-rate neurons). 
 
 ## Python installation
 To install this package globally in editable mode so you can use it anywhere, run:
